@@ -17,6 +17,6 @@ object ValuesVariablesTypes extends App {
 
   var aVaribale = 4
   aVaribale = 5
-  // VAR ARE MUTABLE, have side efect
+  // VAR ARE MUTABLE, have side effect
 
 }
