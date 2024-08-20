@@ -1,4 +1,4 @@
-package excercises
+package exercises
 
 object section1 extends App {
   def greetings(name: String, isFrench: Boolean): String = {
