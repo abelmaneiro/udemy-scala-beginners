@@ -1,6 +1,6 @@
 package exercises
 
-object section1 extends App {
+object Section1 extends App {
   def greetings(name: String, isFrench: Boolean): String = {
     val salutation = if (isFrench) "Bonjour" else "Hello"
     val nameLength = name.length
