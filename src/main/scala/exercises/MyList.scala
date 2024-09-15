@@ -14,7 +14,7 @@ abstract class MyList[+A] {
 }
 
 // Remember can't pass type parameters nor constructor parameters and Nothing subtype of every other class
-object Empty extends MyList[Nothing] {
+case object Empty extends MyList[Nothing] {
   override def head: Nothing = throw new NoSuchElementException()
   override def tail: MyList[Nothing] = throw new NoSuchElementException()
   override def isEmpty: Boolean = true
@@ -26,7 +26,7 @@ object Empty extends MyList[Nothing] {
   override def ++[B >: Nothing](list: MyList[B]): MyList[B] = list
 }
 
-class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
+case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
   override def head: A = h
   override def tail: MyList[A] = t
   override def isEmpty: Boolean = false
