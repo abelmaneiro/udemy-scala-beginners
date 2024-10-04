@@ -11,6 +11,10 @@ abstract class MyList[+A] {
   def flatMap[B](transformer: A => MyList[B]): MyList[B]
   def filter(predicate: A => Boolean): MyList[A]
   def ++[B >: A](myList: MyList[B]): MyList[B]
+  def foreach(func: A => Unit): Unit
+  def sort(func: (A, A) => Int): MyList[A]
+  def zipWith[B, C](myList: MyList[B], func: (A, B) => C): MyList[C]
+  def fold[B](start: B) (func: (B, A) => B): B
 }
 
 // Remember can't pass type parameters nor constructor parameters and Nothing subtype of every other class
@@ -24,7 +28,12 @@ case object Empty extends MyList[Nothing] {
   override def flatMap[B](transformer: Nothing => MyList[B]): MyList[B] = Empty
   override def filter(predicate: Nothing => Boolean): MyList[Nothing] = Empty
   override def ++[B >: Nothing](list: MyList[B]): MyList[B] = list
-  List(1,2,3).filter
+  override def foreach(func: Nothing => Unit): Unit = ()
+  override def sort(func: (Nothing, Nothing) => Int): MyList[Nothing] = Empty
+  override def zipWith[B, C](myList: MyList[B], func: (Nothing, B) => C): MyList[C] =
+    if (!myList.isEmpty) throw new Exception("Zip")
+    else Empty
+  override def fold[B](start: B)(func: (B, Nothing) => B): B = start
 }
 
 case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
@@ -73,6 +82,25 @@ case class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
    */
   override def flatMap[B](transformer: A => MyList[B]): MyList[B] =
     transformer(h) ++ t.flatMap(transformer)
+
+  override def foreach(func: A => Unit): Unit = {
+    func(h)
+    t.foreach(func)
+  }
+  override def sort(func: (A, A) => Int): MyList[A] = {
+    def insert(x: A, sortedList:MyList[A]): MyList[A] =
+      if (sortedList.isEmpty) new Cons(x,Empty)
+      else if (func(x, sortedList.head) <= 0) new Cons(x, sortedList)  // is less than
+      else new Cons(sortedList.head, insert(x, sortedList.tail))
+
+    val sortedTail = t.sort(func)
+    insert(h, sortedTail)
+  }
+  override def zipWith[B, C](myList: MyList[B], func: (A, B) => C): MyList[C] =
+    if (myList.isEmpty) throw new Exception("ZipWith")
+    else new Cons(func(h,myList.head), t.zipWith(myList.tail, func))
+  override def fold[B](start: B)(func: (B, A) => B): B =
+    t.fold(func(start, h)) (func)
 }
 
 //trait MyPredicate[-T] {
@@ -130,4 +158,42 @@ object ListTest extends App {
   println(numList.map(_.toString + "A"))
   println(numList.map(n => alphaNumber.map(a => s"${n.toString}-$a")))
   println(numList.flatMap(n => alphaNumber.map(a => s"${n.toString}-$a")))
+
+  println("FOFs and Curries Exercises")
+  numList.foreach(print) ; println()
+  numList.foreach(element => println(s"element: $element"))
+  println(numList.sort((x, y) => y - x))
+  val numList2 = new Cons(10, new Cons(20, new Cons(30, new Cons(40, Empty))))
+  println(numList.zipWith(numList2, _ + _))
+  println(numList.fold(100)(_ + _))
+
+  def toCurry1(f: (Int, Int) => Int): Int => Int => Int =
+    x => y => f(x, y)
+
+  def toCurry2(f: (x: Int, y: Int) => Int): Int => Int => Int =
+    x => y => f(x, y)
+
+  def fromCurry(f: Int => Int => Int): (Int, Int) => Int =
+    (x, y) => f(x)(y)
+
+  def compose(f: Int => Int, g: Int => Int): Int => Int =
+    x => f(g(x))  // do g next f - compose f using g
+
+  def componse2[A, B, C](f: A => B, g: C => A): C => B =
+    x => f(g(x))
+
+  def andThen(f: Int => Int, g: Int => Int): Int => Int =
+    x =>  g(f(x))  // do f next g - f then g
+
+  def andThen2[A, B, C](f: A => B, g: B => C): A => C =
+    x =>  g(f(x))
+
+  println(toCurry1((x, y) => x + y)(20)(4))
+  println(fromCurry(x => y=> x + y)(30, 4))
+  println(compose(x => x * 10, y => y + 3)(1))  // (1 + 3) * 10 = 40
+  println(andThen(x => x * 10, y => y + 3)(1)) // (1 * 10) + 3 = 13
+  println(componse2((x: String) => x + "AB", (y: Int) => y + "2")(10)) // (10 + "2") + "AB  = 102AB
+  println(andThen2((x: String) => x + "AB", (y: String) => y + 2)("10")) // ("10" + "AB") + 2  = 10AB2
+
+
 }
