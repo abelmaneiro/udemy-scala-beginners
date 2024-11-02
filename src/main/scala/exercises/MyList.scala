@@ -195,5 +195,10 @@ object ListTest extends App {
   println(componse2((x: String) => x + "AB", (y: Int) => y + "2")(10)) // (10 + "2") + "AB  = 102AB
   println(andThen2((x: String) => x + "AB", (y: String) => y + 2)("10")) // ("10" + "AB") + 2  = 10AB2
 
+  println(for {
+      n1 <- list1
+      n2 <- numList
+  } yield s"$n1:$n2")
+
 
 }
